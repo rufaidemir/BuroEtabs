@@ -74,11 +74,11 @@ if __name__ == "__main__":
         for i in range(0,db_frame.shape[0]):
             mtime = db_frame['mtime'][i]
             full_path = db_frame['filePath'][i]
-            last_scrawled_time = db_frame['last_scrawled_time'][i]
+            last_scrawled_time = datetime.datetime.fromisoformat(db_frame['last_scrawled_time'][i])
             new_modification_time=unix_time_to_datetime(os.path.getmtime(full_path))
  
             modified_timestamp_value = 0
-            
+            print(last_scrawled_time, type(last_scrawled_time))
             # if new_modification_time >= last_scrawled_time:
             #     modified_timestamp_value = int(new_modification_time)-int(db_frame['mtime'][i])
             #     print('=====first if',modified_timestamp_value)
