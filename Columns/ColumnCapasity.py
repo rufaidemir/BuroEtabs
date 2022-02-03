@@ -5,6 +5,7 @@ import datetime
 # for initial setting doesnt remove
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import pandas
+pandas.options.mode.chained_assignment = None
 
 suppprted_file_extensions = ['xlsx', 'xls', 'dwg', 'EDB']
 root_path='C:\\Users\\RUFAI.DEMIR\\Desktop\\Rebar_Calc'
@@ -16,7 +17,6 @@ now = datetime.datetime.now().timestamp()
  
 # convert unix time to datetime object
 def unix_time_to_datetime(unix_time):
-    print('=====================',unix_time)
     return datetime.datetime.fromtimestamp(unix_time)
 
 
@@ -28,7 +28,9 @@ def datetime_to_unix_time(datetime_obj):
     return int(time.mktime(c_d_time.timetuple()))
  
 
- 
+def total_second_from_datetime(date):
+    return (date-datetime.datetime(1970,1,1)).total_seconds()
+
 
 def Scraw_Folder_to_DF(folder_path):
     mainData ={
@@ -74,16 +76,19 @@ if __name__ == "__main__":
         for i in range(0,db_frame.shape[0]):
             mtime = db_frame['mtime'][i]
             full_path = db_frame['filePath'][i]
-            last_scrawled_time = datetime.datetime.fromisoformat(db_frame['last_scrawled_time'][i])
-            new_modification_time=unix_time_to_datetime(os.path.getmtime(full_path))
- 
-            modified_timestamp_value = 0
-            print(last_scrawled_time, type(last_scrawled_time))
-            # if new_modification_time >= last_scrawled_time:
-            #     modified_timestamp_value = int(new_modification_time)-int(db_frame['mtime'][i])
-            #     print('=====first if',modified_timestamp_value)
-            db_frame['total_time'][i] = db_frame['total_time'][i]+ modified_timestamp_value
-            db_frame['mtime'][i] = new_modification_time
+            file_is_exists=os.path.exists(full_path)
+            if file_is_exists:
+                last_scrawled_time = datetime.datetime.fromisoformat(db_frame['last_scrawled_time'][i])
+                new_modification_time=datetime.datetime.fromtimestamp((os.path.getmtime(full_path)))
+                modified_timestamp_value = 0
+            
+                # eger son modification time son tarama tarihinden buyuk ise farkini alaraak total sutunuxu gunceller, eger son tarama zamani lastmtime dan buyuk ise pass 
+                if total_second_from_datetime(new_modification_time)>=total_second_from_datetime(last_scrawled_time):
+                    modified_timestamp_value = (new_modification_time-datetime.datetime.fromisoformat(db_frame['mtime'][i])).total_seconds()
+                db_frame['total_time'][i] = db_frame['total_time'][i]+ modified_timestamp_value
+                db_frame['mtime'][i] = new_modification_time
+            else:
+                pass
         db_frame['last_scrawled_time'] = unix_time_to_datetime(now)
         db_frame.to_csv(db_path, index=False)
         print(db_frame)
