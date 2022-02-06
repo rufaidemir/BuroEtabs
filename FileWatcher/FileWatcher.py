@@ -1,3 +1,4 @@
+from msilib.schema import Error
 import os, sys, time
 import datetime
 # for initial setting doesnt remove
@@ -18,7 +19,7 @@ extention_software_match_dict =  {
 
 }
 exclude_folders = []
-root_path='C:\\Users\\RUFAI.DEMIR\\Desktop\\Rebar_Calc'
+root_path='C:\\Users\\RUFAI.DEMIR\\Desktop'
 
 db_path = 'Scraw_Folder_to_DF.csv'
 
@@ -52,39 +53,43 @@ def ModificationTotalSecondsFromLastScrawledTime(filePath, last_scrawled_time):
 
 
 def Scraw_Folder_to_DF(folder_path):
-    suppprted_file_extensions = list(extention_software_match_dict.keys())
-    mainData ={
-        "filePath":[],
-        "root":[],
-        "file":[],
-        "extension":[],
-        "software":[],
-        "ctime":[],
-        "mtime":[],
-        "existing_status":[],
-    }
-    for (root,dirs,files) in os.walk(folder_path, topdown=True):
-        dirs[:] = [d for d in dirs if d not in exclude_folders]
-        # print ('--------------------------------')
-        for file in files:
-            if len(str(file))>0 and "." in file:
-                extention = file[len(file)-(file[::-1].index(".")):]
-                if extention in suppprted_file_extensions:
-                    full_path = root+'\\'+file
-                    mainData['filePath'].append(full_path)
-                    mainData['root'].append(root)
-                    mainData['file'].append(file)
-                    mainData['extension'].append(extention)
-                    # check if extension has soft name in math dict
-                    mainData['software'].append(extention_software_match_dict[extention]) if extention in extention_software_match_dict else mainData['software'].append('Application')
-                    mainData['ctime'].append(datetime.datetime.fromtimestamp(os.path.getctime(full_path)))
-                    mainData['mtime'].append(datetime.datetime.fromtimestamp(os.path.getmtime(full_path)))
-                    mainData['existing_status'].append(True)
+    try:
+        suppprted_file_extensions = list(extention_software_match_dict.keys())
+        mainData ={
+            "filePath":[],
+            "root":[],
+            "file":[],
+            "extension":[],
+            "software":[],
+            "ctime":[],
+            "mtime":[],
+            "existing_status":[],
+        }
+        for (root,dirs,files) in os.walk(folder_path, topdown=True):
+            dirs[:] = [d for d in dirs if d not in exclude_folders]
+            # print ('--------------------------------')
+            for file in files:
+                if len(str(file))>0 and "." in file:
+                    extention = file[len(file)-(file[::-1].index(".")):]
+                    if extention in suppprted_file_extensions:
+                        full_path = root+'\\'+file
+                        mainData['filePath'].append(full_path)
+                        mainData['root'].append(root)
+                        mainData['file'].append(file)
+                        mainData['extension'].append(extention)
+                        # check if extension has soft name in math dict
+                        mainData['software'].append(extention_software_match_dict[extention]) if extention in extention_software_match_dict else mainData['software'].append('Application')
+                        mainData['ctime'].append(datetime.datetime.fromtimestamp(os.path.getctime(full_path)))
+                        mainData['mtime'].append(datetime.datetime.fromtimestamp(os.path.getmtime(full_path)))
+                        mainData['existing_status'].append(True)
 
-    df = pandas.DataFrame(mainData)
-    df['last_scrawled_time'] = unix_time_to_datetime(now)
-    df['total_time'] =0.0
-    return df
+        df = pandas.DataFrame(mainData)
+        df['last_scrawled_time'] = unix_time_to_datetime(now)
+        df['total_time'] =0.0
+        return df
+    except Exception as hata:
+        print('Bir hata alindi, HATA ', hata)
+        raise hata
 
  
 def Main_Scraw_Directory():
@@ -137,12 +142,24 @@ def Main_Scraw_Directory():
 
 # ================================================================================================= MAIN STARTS HERE =================================================================================================
 if __name__ == "__main__":
+    root_path_is_exists = os.path.exists(root_path)
+    if not root_path_is_exists:
+        raise Exception('\033[91m'+' HATA: root_path degiskenini kontrol edin'+'\033[0m')
     db_exists =  os.path.exists(db_path)
+    start_time = datetime.datetime.now()
     if db_exists:
-        print('DB EXISTS SCRAWLING...')
+        print('\033[95m'+'DB EXISTS SCRAWLING...'+'\033[0m')
         Main_Scraw_Directory()
     else:
-        print('DB DOES NOT EXISTS INITIALIZING...')
+        print('\033[95m'+'DB DOES NOT EXISTS INITIALIZING...'+'\033[0m')
         initial_df = Scraw_Folder_to_DF(root_path)
         initial_df.to_csv(db_path)
+    
+    end_time = datetime.datetime.now()
+
+    loop_time =  ((end_time-start_time).total_seconds()/60)
+    print('\033[93m'+'SCRAWLING COMPLETED IN '+'\033[0m')
+    print('                                                        START TIME  : ', start_time)
+    print('                                                        FINISH TIME : ', end_time)
+    print('                                                      TOTAL SECONDS : '+str(" %.3f"%loop_time))
  
