@@ -1,8 +1,10 @@
-from msilib.schema import Error
-import os, sys, time
+import os, sys, time, logging
+from pathlib import Path
 import datetime
 # for initial setting doesnt remove
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+
 import pandas
 pandas.options.mode.chained_assignment = None
 
@@ -18,6 +20,8 @@ extention_software_match_dict =  {
     'nwd':'Navisworks'
 
 }
+logging_common_path = Path(__file__).parents[1]
+
 exclude_folders = []
 root_path='C:\\Users\\RUFAI.DEMIR\\Desktop'
 
@@ -141,7 +145,7 @@ def Main_Scraw_Directory():
 
 
 # ================================================================================================= MAIN STARTS HERE =================================================================================================
-if __name__ == "__main__":
+def Main():
     root_path_is_exists = os.path.exists(root_path)
     if not root_path_is_exists:
         raise Exception('\033[91m'+' HATA: root_path degiskenini kontrol edin'+'\033[0m')
@@ -156,10 +160,36 @@ if __name__ == "__main__":
         initial_df.to_csv(db_path)
     
     end_time = datetime.datetime.now()
-
     loop_time =  ((end_time-start_time).total_seconds()/60)
+
+
+
     print('\033[93m'+'SCRAWLING COMPLETED IN '+'\033[0m')
     print('                                                        START TIME  : ', start_time)
     print('                                                        FINISH TIME : ', end_time)
     print('                                                      TOTAL SECONDS : '+str(" %.3f"%loop_time))
- 
+
+    logging.info('SCRAWLING COMPLETED IN')
+    logging.info('                                                        START TIME  : '+ start_time.strftime("%Y-%m-%d %H:%M:%S"))
+    logging.info('                                                        FINISH TIME : '+ end_time.strftime("%Y-%m-%d %H:%M:%S"))
+    logging.info('                                                      TOTAL SECONDS : '+str(" %.3f"%loop_time))
+
+
+
+def Log_Settings_Initialize():
+    ex=str(logging_common_path)+'\\Logs\\FileWatcher.log'
+    if not os.path.exists(ex):
+        try:
+            path = os.path.join(logging_common_path,'Logs')
+            os.mkdir(path)
+        except OSError as error:
+            print(error)    
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%a, %d %b %Y %H:%M:%S', filename='Logs/FileWatcher.log', filemode='w')
+
+Log_Settings_Initialize()
+
+while True:
+    Main()
+    time.sleep(10)
+
+
