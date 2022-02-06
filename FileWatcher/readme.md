@@ -1,10 +1,14 @@
 nssm link https://nssm.cc/download
-//alternative 2 use nssm-2.24-101-g897c7ad\nssm-2.24-101-g897c7ad\win64 
 
+
+//alternative 2 use nssm-2.24-101-g897c7ad\nssm-2.24-101-g897c7ad\win64
+
+
+*** LOG PATH = "C:\Projeler\PythonP\BuroEtabs\Logs\FileWatcher.log"
 
 1 - nssm.exe install "ServiceName" "..pythonpath\venv\Scripts\python.exe" "...filepath\WatcherService.py"
 
-1.e - nssm.exe install "BuroStatik" "C:\Projeler\PythonP\BuroEtabs\venv\Scripts\python.exe" "C:\Projeler\PythonP\BuroEtabs\FileWatcher\WatcherService.py"
+1.e - nssm.exe install "BuroStatik" "C:\Projeler\PythonP\BuroEtabs\venv\Scripts\python.exe" "C:\Projeler\PythonP\BuroEtabs\FileWatcher\Fi.py"
 
 **For edit with GUI
 2 - nssm.exe edit "Rufai"
