@@ -10,20 +10,26 @@ pandas.options.mode.chained_assignment = None
 extention_software_match_dict =  {
     'xlsx':'Excel',
     'xls':'Excel',
+    'doc':'Word',
     'EDB':'Etaps',
+    'FBD':'Safe',
     'dwg':'AutoCAD',
     'rvt':'Revit',
     'lir':'Lira-Sapr',
     'spf':'Lira-Sapfire',
     'dyn':'Dynamo',
-    'nwd':'Navisworks'
+    'nwd':'Navisworks',
+    'ide10':'IdeCAD10',
+    'ide85':'IdeCAD85',
 
 }
 
-exclude_folders = []
-root_path='C:\\Users\\RUFAI.DEMIR\\Desktop'
+exclude_folders = ["Gelen", 'GELEN','gelen','Mimari','MIMARI','mimari','Users','Teklif','Tekla','ruhsatgelen','zeminetudu']
+project_name_start_index = 1
+root_path='B:\\HALK GYO'
 
 db_path = 'C:\\Projeler\\PythonP\\BuroEtabs\\Scraw_Folder_to_DF.csv'
+db_excel_path = 'C:\\Projeler\\PythonP\\BuroEtabs\\Scraw_Folder_to_DF.xlsx'
 
 now = datetime.datetime.now().timestamp()
 
@@ -61,6 +67,7 @@ def Scraw_Folder_to_DF(folder_path):
             "filePath":[],
             "root":[],
             "file":[],
+            "project_name":[],
             "extension":[],
             "software":[],
             "ctime":[],
@@ -78,6 +85,7 @@ def Scraw_Folder_to_DF(folder_path):
                         mainData['filePath'].append(full_path)
                         mainData['root'].append(root)
                         mainData['file'].append(file)
+                        mainData['project_name'].append(root.split('\\')[project_name_start_index])
                         mainData['extension'].append(extention)
                         # check if extension has soft name in math dict
                         mainData['software'].append(extention_software_match_dict[extention]) if extention in extention_software_match_dict else mainData['software'].append('Application')
@@ -116,6 +124,7 @@ def Main_Scraw_Directory():
             'filePath': [],
             'root': [],
             'file': [],
+            'project_name': [],
             'extension': [],
             'software': [],
             'ctime': [],
@@ -129,6 +138,7 @@ def Main_Scraw_Directory():
             old_data['filePath'].append(db_frame['filePath'][j])
             old_data['root'].append(db_frame['root'][j])
             old_data['file'].append(db_frame['file'][j])
+            old_data['project_name'].append(db_frame['project_name'][j])
             old_data['extension'].append(db_frame['extension'][j])
             old_data['software'].append(db_frame['software'][j])
             old_data['ctime'].append(db_frame['ctime'][j])
@@ -139,6 +149,7 @@ def Main_Scraw_Directory():
 
     to_db_result_frame=new_df.append(pandas.DataFrame(old_data), ignore_index=True)
     to_db_result_frame.to_csv(db_path, index=False)
+    to_db_result_frame.to_excel(db_excel_path, index=False)
 
 
 
@@ -161,7 +172,6 @@ def Main():
     loop_time =  ((end_time-start_time).total_seconds()/60)
 
 
-
     print('\033[93m'+'SCRAWLING COMPLETED IN '+'\033[0m')
     print('                                                        START TIME  : ', start_time)
     print('                                                        FINISH TIME : ', end_time)
@@ -175,6 +185,5 @@ def Main():
 
 while True:
     Main()
-    time.sleep(10)
-
+    time.sleep(600)
 
