@@ -1,33 +1,15 @@
 import watchdog.events
 import watchdog.observers
-import time, os
+import time, os, sys
 import datetime
-from multiprocessing import Process
+# for initial setting doesnt remove
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pandas
 pandas.options.mode.chained_assignment = None
+from Settings import *
 
-db_path = 'C:\\Projeler\\PythonP\\BuroEtabs\\Scraw_Folder_to_DF.csv'
-db_excel_path = 'C:\\Projeler\\PythonP\\BuroEtabs\\Scraw_Folder_to_DF.xlsx'
-project_name_start_index=2
-sleepTime=5
 
-extention_software_match_dict =  {
-    'xlsx':'Excel',
-    'xls':'Excel',
-    'doc':'Word',
-    'EDB':'Etaps',
-    'FBD':'Safe',
-    'dwg':'AutoCAD',
-    'rvt':'Revit',
-    'lir':'Lira-Sapr',
-    'spf':'Lira-Sapfire',
-    'dyn':'Dynamo',
-    'nwd':'Navisworks',
-    'ide10':'IdeCAD10',
-    'ide85':'IdeCAD85',
-
-}
 
 def total_second_from_datetime(date:datetime.datetime) ->datetime.datetime:
     return (date-datetime.datetime(1970,1,1)).total_seconds()
@@ -74,43 +56,46 @@ def UpdateScrawledTimeDBMain():
 
 
 def Check_File_Exists_UpdateDB(full_path):
-    old_db_frame=pandas.read_csv(db_path, index_col=False)
-    db_frame=old_db_frame
-    file_in_db = full_path in list(db_frame['filePath'])
-    total_time = 0
-    if file_in_db:
-        db_index = list(db_frame['filePath']).index(full_path)
-        db_total_time = db_frame['total_time'][db_index]
-        db_last_scrawled_time = db_frame['last_scrawled_time'][db_index]
-        modified_time = ModificationTotalSecondsFromLastScrawledTime(full_path, datetime.datetime.fromisoformat(db_last_scrawled_time))
-        total_time += modified_time + db_total_time
+    try:
+        old_db_frame=pandas.read_csv(db_path, index_col=False)
+        db_frame=old_db_frame
+        file_in_db = full_path in list(db_frame['filePath'])
+        total_time = 0
+        if file_in_db:
+            db_index = list(db_frame['filePath']).index(full_path)
+            db_total_time = db_frame['total_time'][db_index]
+            db_last_scrawled_time = db_frame['last_scrawled_time'][db_index]
+            modified_time = ModificationTotalSecondsFromLastScrawledTime(full_path, datetime.datetime.fromisoformat(db_last_scrawled_time))
+            total_time += modified_time + db_total_time
 
-        db_frame['total_time'][db_index] = total_time
-        db_frame['mtime'][db_index] = datetime.datetime.fromtimestamp(os.path.getmtime(full_path))
-        db_frame['last_scrawled_time'][db_index]=datetime.datetime.now()
-        
-        print(total_time)
-        # save 
-        db_frame.to_csv(db_path, index=False)
-        db_frame.to_excel(db_excel_path, index=False)
-    else:
-        # if file not exists in db
-        file_params = GetFilePrams(full_path)
-        add_db_row = pandas.DataFrame(file_params, index=[0])
+            db_frame['total_time'][db_index] = total_time
+            db_frame['mtime'][db_index] = datetime.datetime.fromtimestamp(os.path.getmtime(full_path))
+            db_frame['last_scrawled_time'][db_index]=datetime.datetime.now()
+            
+            print(total_time)
+            # save 
+            db_frame.to_csv(db_path, index=False)
+            db_frame.to_excel(db_excel_path, index=False)
+        else:
+            # if file not exists in db
+            file_params = GetFilePrams(full_path)
+            add_db_row = pandas.DataFrame(file_params, index=[0])
 
-        # concat new data
-        new_df = pandas.concat([db_frame, add_db_row], ignore_index=True, axis=0)
+            # concat new data
+            new_df = pandas.concat([db_frame, add_db_row], ignore_index=True, axis=0)
 
-        # save
-        new_df.to_csv(db_path, index=False)
-        new_df.to_excel(db_excel_path, index=False)
-
+            # save
+            new_df.to_csv(db_path, index=False)
+            new_df.to_excel(db_excel_path, index=False)
+    except Exception as Hata:
+        print("Error: ", Hata)
+        pass
 
 class Handler(watchdog.events.PatternMatchingEventHandler):
-	def __init__(self):
+	def __init__(self, file_patterns=['*.csv', '*.xls', '*.xlsx','*.dwg','*.rvt','*.EDB','*.nwd','*.pbix','*.FBD','*.doc','*.lir','*.spf','*.ide10','.*ide85'], ignore_file_patterns=['*~$']):
 		# Set the patterns for PatternMatchingEventHandler
-		watchdog.events.PatternMatchingEventHandler.__init__(self, patterns=['*.csv', '*.xls', '*.xlsx','*.dwg','*.rvt','*.EDB','*.nwd','*.pbix','*.FBD','*.doc','*.lir','*.spf'],
-															ignore_directories=True, case_sensitive=False)
+		watchdog.events.PatternMatchingEventHandler.__init__(self, patterns=file_patterns,
+															ignore_directories=True, case_sensitive=False, ignore_patterns=ignore_file_patterns)
 
 	def on_created(self, event):
 		print("Watchdog received created event - % s" % event.src_path)
@@ -124,23 +109,23 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
 	def on_deleted(self, event):
 	    print("Watchdog received deleted event - % s" % event.src_path)
 
-def WatchdogMain():
-	src_path = "C:\\users\\rufai.demir\\Desktop"
-	event_handler = Handler()
-	observer = watchdog.observers.Observer()
-	observer.schedule(event_handler, path=src_path, recursive=True)
-	observer.start()
-	try:
-		while True:
-			time.sleep(1)
-	except KeyboardInterrupt:
-		observer.stop()
-	observer.join()
+class WatchdogMain:
 
+    def __init__(self, target_path='C:\\'):
+        if not os.path.isdir(target_path):
+            raise ValueError(f"{target_path} : is not valid path on this computer.")
+        src_path = target_path
+        event_handler = Handler()
+        observer = watchdog.observers.Observer()
+        observer.schedule(event_handler, path=src_path, recursive=True)
+        observer.start()
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            observer.stop()
+        observer.join()
+
+ 
 if __name__ == "__main__":
-
-    p1 = Process(name='watchdog',target=WatchdogMain)
-    p2 = Process(name='watchdog',target=UpdateScrawledTimeDBMain)
-
-    p1.start()
-    p2.start()
+    a = WatchdogMain()

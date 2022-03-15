@@ -183,7 +183,6 @@ def Main():
     logging.info('                                                      TOTAL SECONDS : '+str(" %.3f"%loop_time))
 
 
-while True:
-    Main()
-    time.sleep(600)
-
+# while True:
+#     Main()
+#     time.sleep(600)
