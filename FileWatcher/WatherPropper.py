@@ -60,10 +60,10 @@ class WatcherPropper:
 
 
 
-a = WatcherPropper(scrawling_directory='C:\\Users\\RUFAI.DEMIR\\Desktop')
+a = WatcherPropper(scrawling_directory='C:\\Users\\rufai\\Downloads')
 
-a.ScrawleDirectory()
-
+df = a.ScrawleDirectory()
+df.to_csv('Scraw_Folder_to_DF.csv')
 
 import pprint
 
